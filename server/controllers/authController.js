@@ -18,20 +18,96 @@ function normalizeDob(value) {
   return value;
 }
 
+
 export async function login(req, res) {
+  console.log('[LOGIN] Stage 1: controller entered');
+
   const { roll_number: rollInput, date_of_birth: dobInput } = req.body || {};
   const roll = validateRollNumber(rollInput);
   const dob = normalizeDob(dobInput);
-  if (roll.error || !dob) throw new HttpError(400, 'Enter a valid registration number and date of birth.');
-  const [rows] = await pool.execute("SELECT * FROM users WHERE roll_number = ? AND role = 'user' LIMIT 1", [roll.value]);
-  const user = rows[0];
-  if (!user || !user.date_of_birth || String(user.date_of_birth).slice(0, 10) !== dob) {
-    throw new HttpError(401, 'Invalid registration number or date of birth.');
+
+  console.log('[LOGIN] Stage 2: input validation', {
+    rollValid: !roll.error,
+    dobValid: Boolean(dob),
+  });
+
+  if (roll.error || !dob) {
+    throw new HttpError(
+      400,
+      'Enter a valid registration number and date of birth.'
+    );
   }
-  if (!user.is_active) throw new HttpError(401, 'Invalid registration number or date of birth.');
-  await pool.execute('UPDATE users SET last_login_at = NOW() WHERE id = ?', [user.id]);
-  return res.json({ token: signToken(user), user: toSelfView(user) });
+
+  let rows;
+
+  console.log('[LOGIN] Stage 3: querying users table');
+
+  try {
+    [rows] = await pool.execute(
+      "SELECT * FROM users WHERE roll_number = ? AND role = 'user' LIMIT 1",
+      [roll.value]
+    );
+
+    console.log('[LOGIN] Stage 4: database query completed', {
+      userFound: Boolean(rows[0]),
+    });
+  } catch (err) {
+    console.error('[LOGIN] DATABASE QUERY FAILED', {
+      code: err.code,
+      errno: err.errno,
+      sqlState: err.sqlState,
+      message: err.message,
+    });
+    throw err;
+  }
+
+  const user = rows[0];
+
+  if (
+    !user ||
+    !user.date_of_birth ||
+    String(user.date_of_birth).slice(0, 10) !== dob
+  ) {
+    console.warn('[LOGIN] Stage 5: credentials did not match');
+    throw new HttpError(
+      401,
+      'Invalid registration number or date of birth.'
+    );
+  }
+
+  if (!user.is_active) {
+    console.warn('[LOGIN] Stage 5: account is inactive');
+    throw new HttpError(
+      401,
+      'Invalid registration number or date of birth.'
+    );
+  }
+
+  console.log('[LOGIN] Stage 6: updating last_login_at');
+
+  try {
+    await pool.execute(
+      'UPDATE users SET last_login_at = NOW() WHERE id = ?',
+      [user.id]
+    );
+    console.log('[LOGIN] Stage 7: last_login_at updated');
+  } catch (err) {
+    console.error('[LOGIN] LAST LOGIN UPDATE FAILED', {
+      code: err.code,
+      message: err.message,
+    });
+    throw err;
+  }
+
+  console.log('[LOGIN] Stage 8: signing token');
+
+  const token = signToken(user);
+
+  console.log('[LOGIN] Stage 9: sending successful response');
+
+  return res.json({ token, user: toSelfView(user) });
 }
+
 
 export async function adminLogin(req, res) {
   const { roll_number: rollInput, password } = req.body || {};
