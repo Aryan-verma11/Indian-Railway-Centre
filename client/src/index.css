@@ -836,19 +836,21 @@ a {
   padding: 0 0.45rem;
 }
 .student-logout {
-  position: absolute;
-  right: 1.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  padding: 0.55rem 1rem;
-  border: 0;
-  border-radius: 30px;
-  background: #fff;
-  color: #152638;
-  font-size: 1rem;
-  font-weight: 700;
+  padding: 8px 16px;
+  border: 1px solid #b91c1c;
+  border-radius: 6px;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 2px 5px #0003;
+}
+.student-logout:hover {
+  background: #b91c1c;
+}
+
+.student-site-header .student-logout {
+  flex-shrink: 0;
 }
 .student-content {
   max-width: 1050px;

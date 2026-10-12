@@ -57,7 +57,8 @@ export default function Header({ studentMinimal = false }) {
           <span>सत्यमेव जयते</span>
         </div>
 
-       {!studentMinimal && (
+
+{!studentMinimal && (
   <>
     <button
       type="button"
@@ -84,12 +85,17 @@ export default function Header({ studentMinimal = false }) {
           {label}
         </NavLink>
       ))}
-      <button type="button" onClick={handleLogout}>
-        Logout
-      </button>
     </nav>
   </>
 )}
+
+<button
+  type="button"
+  className="student-logout"
+  onClick={handleLogout}
+>
+  Logout
+</button>
       </div>
     </header>
   );
