@@ -1,5 +1,6 @@
 import mysql from 'mysql2/promise';
 
+
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   port: Number(process.env.DB_PORT) || 3306,
@@ -10,7 +11,9 @@ const pool = mysql.createPool({
   connectTimeout: 5000,
   connectionLimit: 10,
   dateStrings: true,
-  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: true } : undefined,
+  ssl: process.env.DB_SSL === 'true'
+  ? { rejectUnauthorized: true }
+  : undefined,
 });
 
 export async function withTransaction(work) {
